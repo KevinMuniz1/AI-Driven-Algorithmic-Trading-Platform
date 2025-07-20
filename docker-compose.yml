@@ -1,0 +1,31 @@
+services:
+  people:
+    container_name: people
+    build: ./backend
+    working_dir: /app
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    environment:
+      DEBUG: 1
+    volumes:
+      - ./backend:/app
+    ports:
+      - 8008:8000
+    restart: on-failure
+    depends_on:
+      - redis
+
+  worker:
+    container_name: celery_worker
+    build: ./backend  # uses the same codebase as the backend
+    working_dir: /app
+    command: celery -A celery_app worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
